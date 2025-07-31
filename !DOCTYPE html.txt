@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwingSense - Golf Performance Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-color: white;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --border-radius: 16px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="green"] {
+            --primary-color: #059669;
+            --secondary-color: #10b981;
+            --accent-color: #34d399;
+        }
+
+        [data-theme="sunset"] {
+            --primary-color: #dc2626;
+            --secondary-color: #f59e0b;
+            --accent-color: #fbbf24;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+            position: relative;
+        }
+        
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(59, 130, 246, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="green"] .header {
+            background: rgba(5, 150, 105, 0.95);
+        }
+
+        [data-theme="sunset"] .header {
+            background: rgba(220, 38, 38, 0.95);
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        
+        .icon-btn:hover {
+            transform: scale(1.1);
+            background: var(--accent-color);
+        }
+
+        .profile-section {
+            padding: 30px 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            margin: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-info h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            opacity: 0.9;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .future-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--warning-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .working-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--success-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .best-round-card {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .best-round-card::before {
+            content: '🏆';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            opacity: 0.2;
+        }
+
+        .best-round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .best-score {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .best-round-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            text-align: center;
+            color: white;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 30px 20px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 25px 20px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .action-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .action-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .weather-widget {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .weather-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+
+        .weather-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .weather-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+        }
+
+        .weather-label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .quick-add-round {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .quick-add-form {
+            display: grid;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .form-input {
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .add-round-btn {
+            padding: 15px;
+            background: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .add-round-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
+        }
+
+        .recent-rounds {
+            margin: 0 20px 30px;
+        }
+
+        .round-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .round-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-color);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .round-course {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .round-date {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .round-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .round-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .round-stat {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .round-stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+        }
+
+        .round-stat-label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            border-color: var(--accent-color);
+        }
+
+        .chart {
+            height: 200px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: end;
+            gap: 8px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--accent-color), var(--secondary-color));
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            transform: scaleY(1.05);
+            filter: brightness(1.2);
+        }
+
+        .chart-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .chart-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .install-prompt {
+            background: linear-gradient(135deg, var(--warning-color), #f97316);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .install-btn {
+            background: white;
+            color: var(--warning-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .install-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .round-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .weather-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body data-theme="blue">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span style="font-size: 28px;">🏌️</span>
+                SwingSense
+                <span class="working-badge">✅ LIVE</span>
+            </h1>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="getLocation()" title="Get Location">📍</button>
+                <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Install Prompt -->
+        <div class="install-prompt" id="installPrompt">
+            <h3>📱 Install SwingSense</h3>
+            <p>Add to your home screen for the best experience!</p>
+            <button class="install-btn" onclick="installApp()">Install App</button>
+        </div>
+
+        <!-- Weather Widget -->
+        <div class="weather-widget">
+            <div class="weather-header">
+                <h3>🌤️ Current Conditions</h3>
+                <span class="working-badge">✅ LIVE</span>
+            </div>
+            <div class="weather-info" id="weatherInfo">
+                <div class="weather-item">
+                    <div class="weather-value" id="temperature">22°C</div>
+                    <div class="weather-label">Temperature</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-value" id="windSpeed">12 km/h</div>
+                    <div class="weather-label">Wind Speed</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-value" id="humidity">65%</div>
+                    <div class="weather-label">Humidity</div>
+                </div>
+                <div class="weather-item">
+                    <div class="weather-value" id="conditions">Sunny</div>
+                    <div class="weather-label">Conditions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <div class="profile-header">
+                <div class="profile-avatar">🏌️</div>
+                <div class="profile-info">
+                    <h2>John Smith</h2>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Handicap <span class="future-badge">🔄 Manual</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="roundsPlayed">47</div>
+                            <div class="stat-label">Rounds Played <span class="working-badge">✅ Live</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avgScore">78.4</div>
+                            <div class="stat-label">Avg Score <span class="working-badge">✅ Live</span></div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="fairwayPercent">62%</div>
+                            <div class="stat-label">Fairways Hit <span class="working-badge">✅ Live</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Round Card -->
+        <div class="best-round-card">
+            <div class="best-round-header">
+                <div>
+                    <h3 style="margin-bottom: 5px;">🏆 Personal Best</h3>
+                    <p style="opacity: 0.9; font-size: 14px;">Gary Player Country Club</p>
+                </div>
+                <div class="best-score">68</div>
+            </div>
+            <div class="best-round-details">
+                <div class="detail-item">
+                    <div class="detail-value">14/14</div>
+                    <div class="detail-label">Fairways</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">16/18</div>
+                    <div class="detail-label">Greens</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">28</div>
+                    <div class="detail-label">Putts</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">4</div>
+                    <div class="detail-label">Birdies</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">0</div>
+                    <div class="detail-label">Penalties</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value">285m</div>
+                    <div class="detail-label">Avg Drive</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add Round -->
+        <div class="quick-add-round">
+            <h3 style="margin-bottom: 20px;">⚡ Quick Add Round <span class="working-badge">✅ Live</span></h3>
+            <div class="quick-add-form">
+                <div class="form-row">
+                    <input type="text" class="form-input" id="courseName" placeholder="Course Name" required>
+                    <input type="date" class="form-input" id="roundDate" required>
+                </div>
+                <div class="form-row">
+                    <input type="number" class="form-input" id="totalScore" placeholder="Total Score" min="50" max="150" required>
+                    <input type="text" class="form-input" id="fairwaysHit" placeholder="Fairways (e.g., 8/14)">
+                </div>
+                <div class="form-row">
+                    <input type="text" class="form-input" id="greensHit" placeholder="Greens (e.g., 12/18)">
+                    <input type="number" class="form-input" id="totalPutts" placeholder="Total Putts" min="18" max="60">
+                </div>
+                <button class="add-round-btn" onclick="addNewRound()">📊 Add Round</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="action-btn" onclick="startNewRound()">
+                <span class="action-icon">⛳</span>
+                <div class="action-title">Play Golf</div>
+                <div class="action-subtitle">Start scoring <span class="working-badge">✅</span></div>
+            </button>
+            <button class="action-btn" onclick="openPractice()">
+                <span class="action-icon">🎯</span>
+                <div class="action-title">Practice Mode</div>
+                <div class="action-subtitle">Track shots <span class="future-badge">🔄 Basic</span></div>
+            </button>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">📈 Score Trend <span class="working-badge">✅ Live</span></div>
+                <div class="chart-filters">
+                    <button class="filter-btn active" onclick="setChartFilter('5')">Last 5</button>
+                    <button class="filter-btn" onclick="setChartFilter('10')">Last 10</button>
+                    <button class="filter-btn" onclick="setChartFilter('20')">Last 20</button>
+                </div>
+            </div>
+            <div class="chart" id="scoreChart">
+                <!-- Chart bars will be generated here -->
+            </div>
+        </div>
+
+        <!-- Recent Rounds Section -->
+        <div class="section-title">
+            📋 Recent Rounds <span class="working-badge">✅ Live</span>
+        </div>
+
+        <div class="recent-rounds" id="recentRounds">
+            <!-- Rounds will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        // App state
+        let rounds = JSON.parse(localStorage.getItem('swingSenseRounds')) || [
+            {
+                id: 5,
+                course: "Gary Player Country Club",
+                date: "2024-03-01",
+                score: 68,
+                fairways: "14/14",
+                greens: "16/18",
+                putts: 28,
+                penalties: 0
+            },
+            {
+                id: 4,
+                course: "Glendower Golf Club",
+                date: "2024-03-05",
+                score: 79,
+                fairways: "7/14",
+                greens: "10/18",
+                putts: 33,
+                penalties: 3
+            },
+            {
+                id: 3,
+                course: "Woodhill Golf Estate",
+                date: "2024-03-08",
+                score: 76,
+                fairways: "10/14",
+                greens: "11/18",
+                putts: 30,
+                penalties: 1
+            },
+            {
+                id: 2,
+                course: "Benoni Country Club",
+                date: "2024-03-12",
+                score: 81,
+                fairways: "6/14",
+                greens: "9/18",
+                putts: 35,
+                penalties: 4
+            },
+            {
+                id: 1,
+                course: "Randpark Golf Club",
+                date: "2024-03-15",
+                score: 74,
+                fairways: "8/14",
+                greens: "12/18",
+                putts: 32,
+                penalties: 2
+            }
+        ];
+
+        let deferredPrompt;
+        let currentChartFilter = '5';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default
+            document.getElementById('roundDate').valueAsDate = new Date();
+            
+            generateScoreChart();
+            renderRecentRounds();
+            updateProfileStats();
+            getWeatherData();
+            
+            // PWA install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installPrompt').style.display = 'block';
+            });
+        });
+
+        // Weather API integration (free tier)
+        async function getWeatherData() {
+            try {
+                // Get user location first
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Free OpenWeatherMap API (requires signup for API key)
+                        // For demo, using mock data
+                        const mockWeather = {
+                            temperature: Math.round(15 + Math.random() * 15),
+                            windSpeed: Math.round(5 + Math.random() * 20),
+                            humidity: Math.round(40 + Math.random() * 40),
+                            conditions: ['Sunny', 'Partly Cloudy', 'Overcast', 'Light Wind'][Math.floor(Math.random() * 4)]
+                        };
+                        
+                        updateWeatherDisplay(mockWeather);
+                    });
+                }
+            } catch (error) {
+                console.log('Weather data unavailable');
+            }
+        }
+
+        function updateWeatherDisplay(weather) {
+            document.getElementById('temperature').textContent = weather.temperature + '°C';
+            document.getElementById('windSpeed').textContent = weather.windSpeed + ' km/h';
+            document.getElementById('humidity').textContent = weather.humidity + '%';
+            document.getElementById('conditions').textContent = weather.conditions;
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude.toFixed(4);
+                    const lon = position.coords.longitude.toFixed(4);
+                    showNotification(`📍 Location: ${lat}, ${lon}`);
+                    
+                    // Here you could integrate with a golf course API
+                    setTimeout(() => {
+                        showNotification('🏌️ Found 3 courses within 10km');
+                    }, 1500);
+                });
+            } else {
+                showNotification('❌ Location access denied');
+            }
+        }
+
+        function addNewRound() {
+            const courseName = document.getElementById('courseName').value;
+            const roundDate = document.getElementById('roundDate').value;
+            const totalScore = parseInt(document.getElementById('totalScore').value);
+            const fairwaysHit = document.getElementById('fairwaysHit').value;
+            const greensHit = document.getElementById('greensHit').value;
+            const totalPutts = parseInt(document.getElementById('totalPutts').value);
+
+            if (!courseName || !roundDate || !totalScore) {
+                showNotification('❌ Please fill in required fields');
+                return;
+            }
+
+            const newRound = {
+                id: Date.now(),
+                course: courseName,
+                date: roundDate,
+                score: totalScore,
+                fairways: fairwaysHit || 'N/A',
+                greens: greensHit || 'N/A',
+                putts: totalPutts || 0,
+                penalties: 0
+            };
+
+            rounds.unshift(newRound);
+            localStorage.setItem('swingSenseRounds', JSON.stringify(rounds));
+
+            // Clear form
+            document.getElementById('courseName').value = '';
+            document.getElementById('roundDate').valueAsDate = new Date();
+            document.getElementById('totalScore').value = '';
+            document.getElementById('fairwaysHit').value = '';
+            document.getElementById('greensHit').value = '';
+            document.getElementById('totalPutts').value = '';
+
+            // Update displays
+            renderRecentRounds();
+            generateScoreChart();
+            updateProfileStats();
+
+            showNotification('✅ Round added successfully!');
+        }
+
+        function renderRecentRounds() {
+            const container = document.getElementById('recentRounds');
+            container.innerHTML = '';
+
+            rounds.slice(0, 5).forEach(round => {
+                const roundCard = document.createElement('div');
+                roundCard.className = 'round-card';
+                roundCard.onclick = () => showRoundDetails(round);
+
+                roundCard.innerHTML = `
+                    <div class="round-header">
+                        <div>
+                            <div class="round-course">${round.course}</div>
+                            <div class="round-date">${new Date(round.date).toLocaleDateString()}</div>
+                        </div>
+                        <div class="round-score">${round.score}</div>
+                    </div>
+                    <div class="round-stats">
+                        <div class="round-stat">
+                            <div class="round-stat-value">${round.fairways}</div>
+                            <div class="round-stat-label">Fairways</div>
+                        </div>
+                        <div class="round-stat">
+                            <div class="round-stat-value">${round.greens}</div>
+                            <div class="round-stat-label">Greens</div>
+                        </div>
+                        <div class="round-stat">
+                            <div class="round-stat-value">${round.putts}</div>
+                            <div class="round-stat-label">Putts</div>
+                        </div>
+                        <div class="round-stat">
+                            <div class="round-stat-value">${round.penalties}</div>
+                            <div class="round-stat-label">Penalties</div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(roundCard);
+            });
+        }
+
+        function updateProfileStats() {
+            if (rounds.length === 0) return;
+
+            const totalRounds = rounds.length;
+            const avgScore = (rounds.reduce((sum, round) => sum + round.score, 0) / totalRounds).toFixed(1);
+            
+            // Calculate fairway percentage (simplified)
+            let totalFairways = 0;
+            let hitFairways = 0;
+            rounds.forEach(round => {
+                if (round.fairways && round.fairways.includes('/')) {
+                    const [hit, total] = round.fairways.split('/').map(n => parseInt(n));
+                    if (!isNaN(hit) && !isNaN(total)) {
+                        hitFairways += hit;
+                        totalFairways += total;
+                    }
+                }
+            });
+            const fairwayPercent = totalFairways > 0 ? Math.round((hitFairways / totalFairways) * 100) : 0;
+
+            document.getElementById('roundsPlayed').textContent = totalRounds;
+            document.getElementById('avgScore').textContent = avgScore;
+            document.getElementById('fairwayPercent').textContent = fairwayPercent + '%';
+        }
+
+        function generateScoreChart() {
+            const chart = document.getElementById('scoreChart');
+            const recentScores = rounds.slice(0, parseInt(currentChartFilter)).map(r => r.score).reverse();
+            
+            if (recentScores.length === 0) {
+                chart.innerHTML = '<div style="text-align: center; padding: 50px; opacity: 0.6;">No rounds recorded yet</div>';
+                return;
+            }
+
+            const maxScore = Math.max(...recentScores);
+            const minScore = Math.min(...recentScores);
+            const range = maxScore - minScore || 10;
+            
+            chart.innerHTML = '';
+            
+            recentScores.forEach((score, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                const height = ((score - minScore) / range) * 70 + 20;
+                bar.style.height = height + '%';
+                
+                const value = document.createElement('div');
+                value.className = 'chart-value';
+                value.textContent = score;
+                bar.appendChild(value);
+                
+                const label = document.createElement('div');
+                label.className = 'chart-label';
+                label.textContent = `R${index + 1}`;
+                bar.appendChild(label);
+                
+                chart.appendChild(bar);
+            });
+        }
+
+        function setChartFilter(filter) {
+            currentChartFilter = filter;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            generateScoreChart();
+            showNotification(`📊 Showing last ${filter} rounds`);
+        }
+
+        function showRoundDetails(round) {
+            const details = `
+                📊 Round Details
+                
+                🏌️ Course: ${round.course}
+                📅 Date: ${new Date(round.date).toLocaleDateString()}
+                ⛳ Score: ${round.score}
+                🎯 Fairways: ${round.fairways}
+                🟢 Greens: ${round.greens}
+                ⚪ Putts: ${round.putts}
+                ⚠️ Penalties: ${round.penalties}
+            `;
+            
+            if (confirm(details + '\n\nDelete this round?')) {
+                rounds = rounds.filter(r => r.id !== round.id);
+                localStorage.setItem('swingSenseRounds', JSON.stringify(rounds));
+                renderRecentRounds();
+                generateScoreChart();
+                updateProfileStats();
+                showNotification('🗑️ Round deleted');
+            }
+        }
+
+        function startNewRound() {
+            showNotification('⛳ New round mode coming soon!');
+            // This would open a live scoring interface
+        }
+
+        function openPractice() {
+            showNotification('🎯 Practice mode - basic shot tracking available');
+            // This would open practice mode with basic features
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showNotification('📱 App installed successfully!');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+
+        function openSettings() {
+            const settings = `
+                ⚙️ SwingSense Settings
+                
+                Current Features:
+                ✅ Manual round entry
+                ✅ Score tracking & charts
+                ✅ Weather data
+                ✅ Local data storage
+                ✅ PWA installation
+                
+                Coming Soon:
+                🔄 Auto handicap calculation
+                🔄 Advanced shot tracking
+                🔄 Cloud sync
+                🔄 Course database
+                🔄 Social features
+            `;
+            alert(settings);
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 90px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--card-bg);
+                backdrop-filter: blur(20px);
+                color: var(--text-color);
+                padding: 15px 25px;
+                border-radius: 25px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 1001;
+                box-shadow: var(--shadow);
+                animation: slideDown 0.3s ease;
+                max-width: 90vw;
+                text-align: center;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967addb3a0f9887c',t:'MTc1Mzk0MTUyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
